@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yulu 小舖</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', 'Noto Sans TC', sans-serif; background: #f5f5f5; color: #333; }
+        .header { background: linear-gradient(135deg, #ee4d2d, #ff7337); color: #fff; padding: 16px 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .header-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .header h1 { font-size: 22px; letter-spacing: 1px; white-space: nowrap; }
+        .header h1 span { font-size: 14px; font-weight: normal; opacity: 0.85; margin-left: 8px; }
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .header-btn { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.3s; white-space: nowrap; }
+        .header-btn:hover { background: rgba(255,255,255,0.35); }
+        .lang-btn { background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; transition: all 0.3s; }
+        .lang-btn.active { background: rgba(255,255,255,0.25); border-color: #fff; }
+        .lang-btn:hover { background: rgba(255,255,255,0.15); }
+        .cart-btn { position: relative; }
+        .cart-count { background: #fdd835; color: #333; font-size: 12px; font-weight: bold; padding: 1px 7px; border-radius: 10px; position: absolute; top: -6px; right: -6px; }
+        .user-info { display: flex; align-items: center; gap: 8px; color: #fff; font-size: 14px; }
+        .user-info .avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .user-info .logout-btn { background: none; border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.3s; }
+        .user-info .logout-btn:hover { background: rgba(255,255,255,0.2); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+        .banner { background: linear-gradient(135deg, #ff9a76, #fec84d); border-radius: 10px; padding: 32px 24px; margin-bottom: 20px; color: #fff; text-align: center; }
+        .banner h2 { font-size: 26px; margin-bottom: 6px; }
+        .banner p { font-size: 15px; opacity: 0.9; }
+        .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .search-bar input { flex: 1; padding: 10px 14px; border: 2px solid #eee; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .search-bar input:focus { border-color: #ee4d2d; }
+        .search-bar input::placeholder { color: #bbb; }
+        .search-bar .search-icon { background: #ee4d2d; color: #fff; border: none; border-radius: 6px; padding: 0 16px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        .search-bar .search-icon:hover { background: #c93f1f; }
+        .search-info { font-size: 13px; color: #999; margin: -10px 0 14px; }
+        .section-title { font-size: 18px; font-weight: 600; margin: 20px 0 12px; padding-left: 10px; border-left: 4px solid #ee4d2d; }
+        .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+        .product-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+        .product-card .img-wrap { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #fff; }
+        .product-info { padding: 10px 12px 14px; }
+        .product-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-price { color: #ee4d2d; font-size: 18px; font-weight: 700; }
+        .product-price::before { content: 'NT$ '; font-size: 13px; }
+        .product-sold { font-size: 12px; color: #999; margin-top: 2px; }
+        .product-rating { font-size: 12px; color: #f39c12; margin-top: 2px; }
+        .add-btn { display: block; width: 100%; padding: 8px; margin-top: 8px; background: #ee4d2d; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: background 0.3s; }
+        .add-btn:hover { background: #c93f1f; }
+        .add-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 200; }
+        .overlay.active { display: block; }
+        .panel { position: fixed; top: 0; right: -400px; width: 380px; height: 100%; background: #fff; box-shadow: -4px 0 16px rgba(0,0,0,0.1); transition: right 0.3s; z-index: 201; display: flex; flex-direction: column; }
+        .panel.open { right: 0; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #eee; }
+        .panel-header h2 { font-size: 18px; }
+        .panel-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .panel-close:hover { color: #333; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 12px 20px; }
+        .cart-empty { text-align: center; padding: 60px 0; color: #bbb; }
+        .cart-empty::before { content: '🛒'; font-size: 48px; display: block; margin-bottom: 12px; }
+        .cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .cart-item .thumb { width: 64px; height: 64px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; flex-shrink: 0; }
+        .cart-item-info { flex: 1; }
+        .cart-item-name { font-size: 14px; font-weight: 500; }
+        .cart-item-price { color: #ee4d2d; font-size: 15px; font-weight: 600; margin-top: 4px; }
+        .cart-item-qty { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+        .cart-item-qty button { width: 26px; height: 26px; border: 1px solid #ddd; background: #fafafa; border-radius: 4px; cursor: pointer; font-size: 16px; line-height: 1; }
+        .cart-item-qty button:hover { background: #eee; }
+        .cart-item-qty span { min-width: 20px; text-align: center; font-size: 14px; }
+        .cart-item-remove { background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; align-self: center; }
+        .cart-item-remove:hover { color: #ee4d2d; }
+        .panel-footer { padding: 16px 20px; border-top: 1px solid #eee; }
+        .coupon-area { display: flex; gap: 6px; margin-bottom: 12px; }
+        .coupon-area input { flex: 1; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; outline: none; text-transform: uppercase; }
+        .coupon-area input:focus { border-color: #ee4d2d; }
+        .coupon-area button { padding: 8px 12px; background: #fdd835; color: #333; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: background 0.3s; }
+        .coupon-area button:hover { background: #f9ca24; }
+        .coupon-applied { font-size: 12px; color: #27ae60; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .coupon-applied button { background: none; border: none; color: #ee4d2d; cursor: pointer; font-size: 12px; text-decoration: underline; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .cart-total span:last-child { color: #ee4d2d; }
+        .cart-discount { display: flex; justify-content: space-between; font-size: 13px; color: #27ae60; margin-bottom: 8px; }
+        .checkout-btn { width: 100%; padding: 12px; background: #ee4d2d; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
+        .checkout-btn:hover { background: #c93f1f; }
+        .checkout-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
+        .checkout-modal.active { display: flex; }
+        .checkout-box { background: #fff; border-radius: 12px; width: 640px; max-width: 92vw; max-height: 88vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.18); position: relative; padding: 28px 28px 24px; }
+        .checkout-box h2 { font-size: 20px; margin-bottom: 18px; }
+        .checkout-close { position: absolute; top: 14px; right: 18px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .checkout-close:hover { color: #333; }
+        .checkout-layout { display: flex; gap: 24px; flex-wrap: wrap; }
+        .checkout-left { flex: 1; min-width: 240px; }
+        .checkout-right { width: 260px; flex-shrink: 0; }
+        .checkout-left h3 { font-size: 15px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+        .checkout-row { display: flex; gap: 10px; }
+        .checkout-row .form-group { flex: 1; }
+        .payment-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+        .payment-options label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 10px 12px; border: 1px solid #eee; border-radius: 6px; transition: border-color 0.3s; }
+        .payment-options label:hover { border-color: #ccc; }
+        .payment-options input:checked + span { font-weight: 600; }
+        .payment-options input:checked ~ * { }
+        .payment-options label:has(input:checked) { border-color: #ee4d2d; background: #fff5f2; }
+        .card-fields { display: none; margin-top: 10px; padding: 14px; background: #fafafa; border-radius: 8px; border: 1px solid #eee; }
+        .card-fields.show { display: block; }
+        .card-row { display: flex; gap: 10px; }
+        .card-row .form-group { flex: 1; }
+        .card-row .form-group input { font-family: 'Courier New', monospace; letter-spacing: 1px; }
+        .checkout-summary { background: #fafafa; border-radius: 8px; padding: 14px 16px; }
+        .checkout-summary .cs-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; color: #555; }
+        .checkout-summary .cs-row.cs-total { font-size: 17px; font-weight: 700; color: #ee4d2d; border-top: 1px solid #eee; padding-top: 8px; margin-top: 6px; }
+        .checkout-summary .cs-row.cs-discount { color: #27ae60; }
+        .checkout-summary .cs-items { font-size: 13px; color: #888; margin-bottom: 10px; }
+        .place-order-btn { width: 100%; padding: 13px; background: #ee4d2d; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.3s; margin-top: 14px; }
+        .place-order-btn:hover { background: #c93f1f; }
+        .order-confirm { text-align: center; padding: 30px 20px; }
+        .order-confirm .oc-icon { font-size: 56px; margin-bottom: 12px; }
+        .order-confirm h2 { font-size: 22px; margin-bottom: 6px; }
+        .order-confirm p { color: #888; font-size: 14px; margin-bottom: 4px; }
+        .order-confirm .oc-details { text-align: left; background: #fafafa; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13px; line-height: 1.8; }
+        .order-confirm .oc-details span { color: #555; }
+        .order-confirm .oc-btn { padding: 11px 28px; background: #ee4d2d; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; transition: background 0.3s; }
+        .order-confirm .oc-btn:hover { background: #c93f1f; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 400; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-box { background: #fff; border-radius: 10px; padding: 28px 24px; width: 360px; max-width: 90vw; box-shadow: 0 8px 30px rgba(0,0,0,0.15); position: relative; }
+        .modal-box h2 { text-align: center; margin-bottom: 20px; font-size: 20px; }
+        .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .modal-close:hover { color: #333; }
+        .tabs { display: flex; margin-bottom: 16px; border-bottom: 2px solid #eee; }
+        .tabs button { flex: 1; padding: 10px; background: none; border: none; font-size: 15px; cursor: pointer; color: #999; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.3s, border-color 0.3s; }
+        .tabs button.active { color: #ee4d2d; border-bottom-color: #ee4d2d; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 13px; color: #666; }
+        .form-group input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .form-group input:focus { border-color: #ee4d2d; }
+        .submit-btn { width: 100%; padding: 11px; background: #ee4d2d; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; transition: background 0.3s; }
+        .submit-btn:hover { background: #c93f1f; }
+        .form-error { color: #ee4d2d; font-size: 13px; margin-top: 8px; text-align: center; display: none; }
+        .detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 600; align-items: center; justify-content: center; }
+        .detail-modal.active { display: flex; }
+        .detail-box { background: #fff; border-radius: 12px; width: 560px; max-width: 92vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.18); position: relative; }
+        .detail-box .detail-close { position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.4); color: #fff; border: none; font-size: 20px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 1; }
+        .detail-box .detail-close:hover { background: rgba(0,0,0,0.6); }
+        .detail-img { width: 100%; height: 240px; display: flex; align-items: center; justify-content: center; font-size: 72px; color: #fff; }
+        .detail-body { padding: 20px 24px 24px; }
+        .detail-body h2 { font-size: 20px; margin-bottom: 6px; }
+        .detail-price { color: #ee4d2d; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .detail-price::before { content: 'NT$ '; font-size: 16px; }
+        .detail-meta { display: flex; gap: 16px; font-size: 13px; color: #999; margin-bottom: 16px; }
+        .detail-meta span { display: flex; align-items: center; gap: 4px; }
+        .detail-meta .star { color: #f39c12; }
+        .detail-desc { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 16px; padding: 12px 14px; background: #fafafa; border-radius: 6px; }
+        .detail-add-btn { width: 100%; padding: 12px; background: #ee4d2d; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.3s; margin-bottom: 20px; }
+        .detail-add-btn:hover { background: #c93f1f; }
+        .review-section { border-top: 1px solid #eee; padding-top: 16px; }
+        .review-section h3 { font-size: 15px; margin-bottom: 12px; }
+        .review-item { padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+        .review-item:last-child { border-bottom: none; }
+        .review-item .rev-user { font-size: 13px; font-weight: 600; color: #333; }
+        .review-item .rev-star { color: #f39c12; font-size: 13px; }
+        .review-item .rev-text { font-size: 13px; color: #666; margin-top: 3px; }
+        .review-item .rev-date { font-size: 11px; color: #bbb; margin-top: 2px; }
+        .review-empty { text-align: center; padding: 24px 0; color: #bbb; font-size: 13px; }
+        .review-form { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .review-form select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; outline: none; }
+        .review-form input { flex: 1; min-width: 140px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; outline: none; }
+        .review-form input:focus { border-color: #ee4d2d; }
+        .review-form button { padding: 8px 16px; background: #ee4d2d; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; transition: background 0.3s; white-space: nowrap; }
+        .review-form button:hover { background: #c93f1f; }
+        .toast { visibility: hidden; min-width: 200px; background: #333; color: #fff; text-align: center; border-radius: 6px; padding: 12px 20px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 700; opacity: 0; transition: opacity 0.4s, visibility 0.4s; }
+        .toast.show { visibility: visible; opacity: 1; }
+        @media (max-width: 620px) {
+            .products { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .panel { width: 100%; right: -100%; }
+            .header h1 { font-size: 16px; }
+            .header h1 span { display: none; }
+            .header-actions { gap: 4px; }
+            .header-btn { padding: 6px 8px; font-size: 12px; }
+            .lang-btn { font-size: 11px; padding: 3px 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <h1 id="storeTitle">Yulu 小舖 <span>｜全館免運中</span></h1>
+        <div class="header-actions">
+            <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中文</button>
+            <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+            <div id="userArea"></div>
+            <button class="header-btn" onclick="openSellerDashboard()" id="sellerCenterBtn">🏪 <span id="sellerCenterLabel">賣家中心</span></button>
+            <button class="header-btn cart-btn" onclick="toggleCart()">
+                🛒 <span id="cartLabel">購物車</span> <span class="cart-count" id="cartCount">0</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="banner">
+        <h2 id="bannerTitle">🔥 初夏特賣．限時優惠</h2>
+        <p id="bannerSub">全館滿 499 免運 ｜ 新會員現折 $50</p>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋商品名稱..." oninput="filterProducts()">
+        <button class="search-icon" onclick="filterProducts()" id="searchBtn">搜尋</button>
+    </div>
+    <div class="search-info" id="searchInfo"></div>
+    <div id="sellerFilterBar" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div>
+
+    <h3 class="section-title" id="sectionTitle">🛍️ 精選商品</h3>
+    <div class="products" id="productList"></div>
+</div>
+
+<div class="overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="panel" id="cartPanel">
+    <div class="panel-header">
+        <h2 id="cartPanelTitle">🛒 購物車</h2>
+        <button class="panel-close" onclick="toggleCart()">&times;</button>
+    </div>
+    <div class="panel-body" id="cartItems"></div>
+    <div class="panel-footer">
+        <div class="coupon-area">
+            <input type="text" id="couponInput" placeholder="輸入折價券代碼" maxlength="20">
+            <button onclick="applyCoupon()" id="couponApplyBtn">套用</button>
+        </div>
+        <div id="couponStatus"></div>
+        <div class="cart-total">
+            <span id="cartSubtotalLabel">小計</span>
+            <span id="cartSubtotal">NT$ 0</span>
+        </div>
+        <div class="cart-discount" id="cartDiscountRow" style="display:none">
+            <span id="cartDiscountLabel">折價</span>
+            <span id="cartDiscount">-NT$ 0</span>
+        </div>
+        <div class="cart-total">
+            <span id="cartTotalLabel">總計</span>
+            <span id="cartTotal">NT$ 0</span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()" id="checkoutBtn">立即結帳</button>
+    </div>
+</div>
+
+<div class="modal" id="authModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeAuth()">&times;</button>
+        <h2 id="authTitle">👤 會員中心</h2>
+        <div class="tabs">
+            <button id="tabLogin" class="active" onclick="switchTab('login')">登入</button>
+            <button id="tabRegister" onclick="switchTab('register')">註冊</button>
+        </div>
+        <div id="authForm"></div>
+    </div>
+</div>
+
+<div class="detail-modal" id="detailModal" onclick="if(event.target===this)closeDetail()">
+    <div class="detail-box">
+        <button class="detail-close" onclick="closeDetail()">&times;</button>
+        <div id="detailContent"></div>
+    </div>
+</div>
+
+<div class="checkout-modal" id="checkoutModal" onclick="if(event.target===this)closeCheckout()">
+    <div class="checkout-box">
+        <button class="checkout-close" onclick="closeCheckout()">&times;</button>
+        <div id="checkoutContent"></div>
+    </div>
+</div>
+
+<div class="detail-modal" id="sellerModal" onclick="if(event.target===this)closeSellerDashboard()">
+    <div class="detail-box" style="width:740px;max-width:94vw">
+        <button class="detail-close" onclick="closeSellerDashboard()">&times;</button>
+        <div id="sellerContent" style="min-height:300px"></div>
+    </div>
+</div>
+
+<div class="detail-modal" id="orderHistoryModal" onclick="if(event.target===this)closeOrderHistory()">
+    <div class="detail-box" style="width:640px;max-width:94vw">
+        <button class="detail-close" onclick="closeOrderHistory()">&times;</button>
+        <div id="orderHistoryContent" style="min-height:200px;padding:24px"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const colors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
+    const emojis = ['🎧','🔋','🎒','🗄️','🔌','☕','💻','🖱️'];
+
+    const langData = {
+        zh: {
+            title: 'Yulu 小舖 <span>｜全館免運中</span>',
+            cart: '購物車', cartPanel: '🛒 購物車', cartEmpty: '購物車是空的',
+            searchPlaceholder: '🔍 搜尋商品名稱...', searchBtn: '搜尋',
+            searchResult: '🔍 搜尋 "{q}"，共 {n} 項結果', noResult: '😕 沒有符合的商品',
+            sectionTitle: '🛍️ 精選商品', addCart: '加入購物車',
+            bannerTitle: '🔥 初夏特賣．限時優惠', bannerSub: '全館滿 499 免運 ｜ 新會員現折 $50',
+            sold: '已售出', noRating: '尚無評分',
+            subtotal: '小計', discount: '折價', total: '總計',
+            couponPlaceholder: '輸入折價券代碼', couponApply: '套用',
+            couponHint: '試試折價券：', couponRemove: '移除',
+            couponBelowMin: '(未達滿額門檻)', checkout: '立即結帳',
+            authTitle: '👤 會員中心', tabLogin: '登入', tabRegister: '註冊',
+            loginEmailLabel: '電子郵件', loginPwdLabel: '密碼', loginBtn: '登入',
+            loginEmailPlaceholder: 'example@mail.com', loginPwdPlaceholder: '請輸入密碼',
+            regNameLabel: '姓名', regEmailLabel: '電子郵件', regPwdLabel: '密碼',
+            regNamePlaceholder: '您的姓名', regEmailPlaceholder: 'example@mail.com',
+            regPwdPlaceholder: '至少 6 碼', regBtn: '註冊',
+            loginRequired: '請先登入再結帳',
+            loginRequiredReview: '請先登入才能評價',
+            fillAll: '請填寫所有欄位', pwdTooShort: '密碼至少 6 個字元',
+            emailRegistered: '此 Email 已註冊過', registerSuccess: '✅ 註冊成功，請登入',
+            invalidEmailPwd: '請填寫 Email 與密碼', wrongEmailPwd: 'Email 或密碼錯誤',
+            welcomeBack: '👋 歡迎回來，{name}', loggedOut: '已登出',
+            addCartToast: '已加入購物車', couponEmpty: '請輸入折價券代碼',
+            couponInvalid: '無效的折價券代碼', couponMin: '此券需滿 NT${n} 才能使用',
+            couponApplied: '✅ 已套用 {desc}', couponRemoved: '已移除折價券',
+            reviewTitle: '📝 商品評價 ({n})', reviewEmpty: '尚無評價，來寫第一則評價吧！',
+            reviewPlaceholder: '寫下你的評價...', reviewSubmit: '送出',
+            reviewSubmitted: '✅ 評價已送出', reviewInputRequired: '請輸入評價內容',
+            checkoutEmpty: '購物車是空的',
+            checkoutMsg: '✅ {name}，訂單已送出！共 {n} 件，實付 NT${total}',
+            checkoutSave: ' (省了 NT${n})',
+            detailAddCart: '加入購物車',
+            userMenu: '👤 登入／註冊', logout: '登出',
+            soldPrefix: '已售出',
+            noRatingText: '尚無評分',
+            checkoutTitle: '結帳',
+            shipRecipient: '收件人', shipPhone: '電話', shipAddress: '送貨地址',
+            shipRecipientPlaceholder: '您的姓名', shipPhonePlaceholder: '0912-345-678',
+            shipAddressPlaceholder: '請輸入完整地址（含縣市／鄉鎮／路名）',
+            paymentMethod: '付款方式',
+            payCC: '信用卡 (一次付清)', payATM: 'ATM 轉帳', payCOD: '貨到付款',
+            orderItems: '商品 ({n} 件)', orderSubtotal: '小計', orderDiscount: '折價',
+            orderShipping: '運費', orderFree: '免運', orderTotal: '應付金額',
+            placeOrder: '送出訂單',
+            confirmTitle: '🎉 訂單成立！',
+            confirmMsg: '感謝您的購買，我們將盡快出貨。',
+            confirmNum: '訂單編號：{n}',
+            confirmShip: '預計配送至：{addr}',
+            confirmPay: '付款方式：{pay}',
+            confirmBack: '繼續購物',
+            payCCLabel: '信用卡', payATMLabel: 'ATM 轉帳', payCODLabel: '貨到付款',
+            sellerCenter: '賣家中心', sellerDashboard: '賣家後台',
+            sellerProducts: '我的商品', sellerOrders: '我的訂單',
+            addProduct: '新增商品', editProduct: '編輯商品', deleteProduct: '刪除商品',
+            saveProduct: '儲存商品', cancel: '取消',
+            becomeSeller: '成為賣家',
+            sellerNameLabel: '賣家', officialStore: '官方',
+            allProducts: '全部商品', officialProducts: '官方商品', sellerProductsFilter: '賣家商品',
+            noSellerProducts: '暫無商品，點擊上方新增', sellerOrderEmpty: '暫無訂單',
+            bySeller: '賣家：', confirmDeleteProduct: '確認刪除此商品？',
+            productSaved: '✅ 商品已儲存', productDeleted: '✅ 商品已刪除',
+            productName: '商品名稱', productPrice: '價格', productDesc: '商品描述',
+            myOrders: '我的訂單', orderHistory: '訂單查詢', noOrders: '暫無訂單',
+            statusPending: '⏳ 待出貨', statusShipped: '✅ 已出貨', statusCompleted: '✅ 已完成',
+            shipOrder: '出貨', confirmShip: '確認出貨？', shipSuccess: '✅ 已出貨',
+            completeOrder: '完成訂單', completeAndReview: '完成訂單並評價',
+        },
+        en: {
+            title: 'Yulu Shop <span>｜Free Shipping</span>',
+            cart: 'Cart', cartPanel: '🛒 Cart', cartEmpty: 'Your cart is empty',
+            searchPlaceholder: '🔍 Search products...', searchBtn: 'Search',
+            searchResult: '🔍 "{q}" — {n} result(s)', noResult: '😕 No products found',
+            sectionTitle: '🛍️ Featured Products', addCart: 'Add to Cart',
+            bannerTitle: '🔥 Summer Sale', bannerSub: 'Free shipping over NT$499 ｜ NT$50 off for new members',
+            sold: 'Sold', noRating: 'No ratings',
+            subtotal: 'Subtotal', discount: 'Discount', total: 'Total',
+            couponPlaceholder: 'Enter coupon code', couponApply: 'Apply',
+            couponHint: 'Try: ', couponRemove: 'Remove',
+            couponBelowMin: '(below minimum)', checkout: 'Checkout',
+            authTitle: '👤 Member', tabLogin: 'Login', tabRegister: 'Register',
+            loginEmailLabel: 'Email', loginPwdLabel: 'Password', loginBtn: 'Login',
+            loginEmailPlaceholder: 'example@mail.com', loginPwdPlaceholder: 'Enter password',
+            regNameLabel: 'Name', regEmailLabel: 'Email', regPwdLabel: 'Password',
+            regNamePlaceholder: 'Your name', regEmailPlaceholder: 'example@mail.com',
+            regPwdPlaceholder: 'At least 6 chars', regBtn: 'Register',
+            loginRequired: 'Please login first',
+            loginRequiredReview: 'Please login to review',
+            fillAll: 'Please fill in all fields', pwdTooShort: 'Password must be at least 6 characters',
+            emailRegistered: 'This email is already registered', registerSuccess: '✅ Registered! Please login',
+            invalidEmailPwd: 'Please enter email and password', wrongEmailPwd: 'Incorrect email or password',
+            welcomeBack: '👋 Welcome back, {name}', loggedOut: 'Logged out',
+            addCartToast: 'Added to cart', couponEmpty: 'Please enter a coupon code',
+            couponInvalid: 'Invalid coupon code', couponMin: 'Minimum spend NT${n} required',
+            couponApplied: '✅ Applied {desc}', couponRemoved: 'Coupon removed',
+            reviewTitle: '📝 Reviews ({n})', reviewEmpty: 'No reviews yet. Be the first!',
+            reviewPlaceholder: 'Write your review...', reviewSubmit: 'Submit',
+            reviewSubmitted: '✅ Review submitted', reviewInputRequired: 'Please enter review text',
+            checkoutEmpty: 'Cart is empty',
+            checkoutMsg: '✅ {name}, order placed! {n} item(s), total NT${total}',
+            checkoutSave: ' (saved NT${n})',
+            detailAddCart: 'Add to Cart',
+            userMenu: '👤 Login / Register', logout: 'Logout',
+            soldPrefix: 'Sold',
+            noRatingText: 'No ratings',
+            checkoutTitle: 'Checkout',
+            shipRecipient: 'Recipient', shipPhone: 'Phone', shipAddress: 'Shipping Address',
+            shipRecipientPlaceholder: 'Your name', shipPhonePlaceholder: '0912-345-678',
+            shipAddressPlaceholder: 'Full address (city/district/street)',
+            paymentMethod: 'Payment Method',
+            payCC: 'Credit Card', payATM: 'ATM Transfer', payCOD: 'Cash on Delivery',
+            orderItems: 'Items ({n})', orderSubtotal: 'Subtotal', orderDiscount: 'Discount',
+            orderShipping: 'Shipping', orderFree: 'Free', orderTotal: 'Total',
+            placeOrder: 'Place Order',
+            confirmTitle: '🎉 Order Confirmed!',
+            confirmMsg: 'Thank you for your purchase. We will ship it soon.',
+            confirmNum: 'Order #: {n}',
+            confirmShip: 'Shipping to: {addr}',
+            confirmPay: 'Payment: {pay}',
+            confirmBack: 'Continue Shopping',
+            payCCLabel: 'Credit Card', payATMLabel: 'ATM Transfer', payCODLabel: 'Cash on Delivery',
+            sellerCenter: 'Seller Center', sellerDashboard: 'Seller Dashboard',
+            sellerProducts: 'My Products', sellerOrders: 'My Orders',
+            addProduct: 'Add Product', editProduct: 'Edit', deleteProduct: 'Delete',
+            saveProduct: 'Save', cancel: 'Cancel',
+            becomeSeller: 'Become a Seller',
+            sellerNameLabel: 'Seller', officialStore: 'Official',
+            allProducts: 'All Products', officialProducts: 'Official', sellerProductsFilter: 'Sellers',
+            noSellerProducts: 'No products yet', sellerOrderEmpty: 'No orders yet',
+            bySeller: 'By: ', confirmDeleteProduct: 'Delete this product?',
+            productSaved: '✅ Product saved', productDeleted: '✅ Product deleted',
+            productName: 'Product Name', productPrice: 'Price', productDesc: 'Description',
+            myOrders: 'My Orders', orderHistory: 'Order History', noOrders: 'No orders yet',
+            statusPending: '⏳ Pending', statusShipped: '✅ Shipped', statusCompleted: '✅ Completed',
+            shipOrder: 'Ship', confirmShip: 'Confirm shipment?', shipSuccess: '✅ Shipped',
+            completeOrder: 'Complete', completeAndReview: 'Complete & Review',
+        },
+        ja: {
+            title: 'Yulu ショップ <span>｜送料無料</span>',
+            cart: 'カート', cartPanel: '🛒 カート', cartEmpty: 'カートは空です',
+            searchPlaceholder: '🔍 商品を検索...', searchBtn: '検索',
+            searchResult: '🔍 "{q}" — {n} 件見つかりました', noResult: '😕 該当する商品がありません',
+            sectionTitle: '🛍️ おすすめ商品', addCart: 'カートに入れる',
+            bannerTitle: '🔥 初夏セール', bannerSub: 'NT$499以上で送料無料 ｜ 新会員 NT$50 割引',
+            sold: '売れた', noRating: '評価なし',
+            subtotal: '小計', discount: '割引', total: '合計',
+            couponPlaceholder: 'クーポンコードを入力', couponApply: '適用',
+            couponHint: '試す：', couponRemove: '削除',
+            couponBelowMin: '(最低金額未満)', checkout: 'レジに進む',
+            authTitle: '👤 メンバー', tabLogin: 'ログイン', tabRegister: '登録',
+            loginEmailLabel: 'メールアドレス', loginPwdLabel: 'パスワード', loginBtn: 'ログイン',
+            loginEmailPlaceholder: 'example@mail.com', loginPwdPlaceholder: 'パスワードを入力',
+            regNameLabel: '名前', regEmailLabel: 'メールアドレス', regPwdLabel: 'パスワード',
+            regNamePlaceholder: 'あなたの名前', regEmailPlaceholder: 'example@mail.com',
+            regPwdPlaceholder: '6文字以上', regBtn: '登録',
+            loginRequired: 'ログインしてください',
+            loginRequiredReview: 'ログインしてから評価してください',
+            fillAll: 'すべての項目を入力してください', pwdTooShort: 'パスワードは6文字以上必要です',
+            emailRegistered: 'このメールは既に登録されています', registerSuccess: '✅ 登録完了！ログインしてください',
+            invalidEmailPwd: 'メールとパスワードを入力してください', wrongEmailPwd: 'メールまたはパスワードが違います',
+            welcomeBack: '👋 おかえりなさい、{name}', loggedOut: 'ログアウトしました',
+            addCartToast: 'カートに追加しました', couponEmpty: 'クーポンコードを入力してください',
+            couponInvalid: '無効なクーポンコードです', couponMin: '最低 NT${n} 以上の購入が必要です',
+            couponApplied: '✅ {desc} を適用しました', couponRemoved: 'クーポンを削除しました',
+            reviewTitle: '📝 レビュー ({n})', reviewEmpty: 'レビューはまだありません。最初に書きましょう！',
+            reviewPlaceholder: 'レビューを書く...', reviewSubmit: '送信',
+            reviewSubmitted: '✅ レビューを送信しました', reviewInputRequired: 'レビュー内容を入力してください',
+            checkoutEmpty: 'カートは空です',
+            checkoutMsg: '✅ {name}、注文しました！{n} 点、合計 NT${total}',
+            checkoutSave: ' (NT${n} お得)',
+            detailAddCart: 'カートに入れる',
+            userMenu: '👤 ログイン／登録', logout: 'ログアウト',
+            soldPrefix: '売れた',
+            noRatingText: '評価なし',
+            checkoutTitle: 'レジに進む',
+            shipRecipient: 'お届け先', shipPhone: '電話番号', shipAddress: '配送先住所',
+            shipRecipientPlaceholder: 'あなたの名前', shipPhonePlaceholder: '0912-345-678',
+            shipAddressPlaceholder: '完全な住所（都道府県／市区町村／番地）',
+            paymentMethod: '支払い方法',
+            payCC: 'クレジットカード', payATM: 'ATM振込', payCOD: '代金引換',
+            orderItems: '商品 ({n} 点)', orderSubtotal: '小計', orderDiscount: '割引',
+            orderShipping: '送料', orderFree: '無料', orderTotal: '請求額',
+            placeOrder: '注文を確定',
+            confirmTitle: '🎉 注文完了！',
+            confirmMsg: 'ご注文ありがとうございます。すぐに出荷いたします。',
+            confirmNum: '注文番号：{n}',
+            confirmShip: '配送先：{addr}',
+            confirmPay: '支払い方法：{pay}',
+            confirmBack: '買い物を続ける',
+            payCCLabel: 'クレジットカード', payATMLabel: 'ATM振込', payCODLabel: '代金引換',
+            sellerCenter: '売り場', sellerDashboard: '売り場管理',
+            sellerProducts: '出品商品', sellerOrders: '注文管理',
+            addProduct: '商品を追加', editProduct: '編集', deleteProduct: '削除',
+            saveProduct: '保存', cancel: 'キャンセル',
+            becomeSeller: '出品者になる',
+            sellerNameLabel: '出品者', officialStore: '公式',
+            allProducts: '全ての商品', officialProducts: '公式', sellerProductsFilter: '出品者',
+            noSellerProducts: '商品がありません', sellerOrderEmpty: '注文がありません',
+            bySeller: '出品者：', confirmDeleteProduct: 'この商品を削除しますか？',
+            productSaved: '✅ 保存しました', productDeleted: '✅ 削除しました',
+            productName: '商品名', productPrice: '価格', productDesc: '商品説明',
+            myOrders: '注文履歴', orderHistory: '注文照会', noOrders: '注文がありません',
+            statusPending: '⏳ 出荷待ち', statusShipped: '✅ 発送済み', statusCompleted: '✅ 完了',
+            shipOrder: '発送', confirmShip: '発送しますか？', shipSuccess: '✅ 発送しました',
+            completeOrder: '完了', completeAndReview: '完了してレビュー',
+        }
+    };
+
+    const langNames = ['zh', 'en', 'ja'];
+    const products = [
+        { id: 1, name: { zh: '無線藍牙耳機 AirPro', en: 'Wireless Earbuds AirPro', ja: 'ワイヤレスイヤホン AirPro' }, price: 699, sold: 2847, desc: { zh: '高音質藍牙 5.3 晶片，續航 30 小時，IPX5 防水，附充電艙。支援降噪通話，舒適入耳設計。', en: 'Bluetooth 5.3, 30hr battery, IPX5 waterproof, charging case included. Noise-cancelling calls, comfortable fit.', ja: 'Bluetooth 5.3、30時間連続再生、IPX5防水、充電ケース付属。ノイズキャンセリング対応、快適な装着感。' } },
+        { id: 2, name: { zh: '輕薄行動電源 10000mAh', en: 'Portable Power Bank 10000mAh', ja: 'モバイルバッテリー 10000mAh' }, price: 459, sold: 1532, desc: { zh: '僅 180g 輕薄機身，雙 USB 輸出，支援 PD 快充。通過 BSMI 安全認證，出遊必備。', en: 'Only 180g, dual USB output, PD fast charging. BSMI certified, travel essential.', ja: 'わずか180gの軽量ボディ、デュアルUSB出力、PD急速充電対応。BSMI認証済み、旅行に最適。' } },
+        { id: 3, name: { zh: '復古帆布後背包', en: 'Vintage Canvas Backpack', ja: 'ヴィンテージキャンバスバックパック' }, price: 599, sold: 971, desc: { zh: '文青風帆布材質，大容量主袋＋筆電夾層，加厚肩帶減壓設計。日常上課／通勤適用。', en: 'Vintage canvas, large main compartment + laptop sleeve, padded shoulder straps. Great for school/commute.', ja: 'ヴィンテージキャンバス素材、大容量メイン＋ノートPCスリーブ、パッド入りショルダーストラップ。通学・通勤に最適。' } },
+        { id: 4, name: { zh: '簡約桌上收納架', en: 'Minimalist Desk Organizer', ja: 'シンプルデスクオーガナイザー' }, price: 299, sold: 2103, desc: { zh: '多格分層設計，收納文具、手機、眼鏡等小物。楠竹材質，自然質感融入居家。', en: 'Multi-compartment design for stationery, phone, glasses. Bamboo material, natural feel.', ja: '多段階仕切りで文房具やスマホ、メガネなどを整理。竹素材でナチュラルな質感。' } },
+        { id: 5, name: { zh: 'USB-C 快充傳輸線 1M', en: 'USB-C Fast Charging Cable 1M', ja: 'USB-C 急速充電ケーブル 1M' }, price: 149, sold: 5621, desc: { zh: '支援 60W PD 快充，資料傳輸速度 480Mbps。編織線身耐拉扯，接頭加強防斷。', en: '60W PD fast charging, 480Mbps data transfer. Braided cable, reinforced connectors.', ja: '60W PD急速充電対応、データ転送480Mbps。編み込みケーブルで丈夫、コネクタ補強設計。' } },
+        { id: 6, name: { zh: '北歐風陶瓷馬克杯 350ml', en: 'Nordic Ceramic Mug 350ml', ja: '北欧風セラミックマグカップ 350ml' }, price: 249, sold: 874, desc: { zh: '手作感陶瓷杯身，霧面釉色，握感舒適。可進微波爐與洗碗機，送禮自用兩相宜。', en: 'Handcrafted ceramic, matte glaze, comfortable grip. Microwave & dishwasher safe.', ja: '手作り感あふれる陶器、マットな釉薬、持ちやすい形状。電子レンジ・食洗機対応。' } },
+        { id: 7, name: { zh: '可折疊筆電支架', en: 'Foldable Laptop Stand', ja: '折りたたみノートPCスタンド' }, price: 389, sold: 1245, desc: { zh: '六段高度可調，鋁合金材質穩固散熱。摺疊後僅 2cm 厚，方便攜帶。支援 10-17 吋筆電。', en: '6 adjustable heights, aluminum alloy for stability & heat dissipation. Folds to 2cm thick. Supports 10-17" laptops.', ja: '6段階高さ調節、アルミ合金製で安定＆放熱。折りたたみ厚さ2cmで携帯便利。10-17インチ対応。' } },
+        { id: 8, name: { zh: '靜音無線滑鼠', en: 'Silent Wireless Mouse', ja: '静音ワイヤレスマウス' }, price: 349, sold: 3210, desc: { zh: '超靜音按鍵，2.4G + 藍牙雙模連接。省電續航達 12 個月，人體工學設計。', en: 'Ultra-silent clicks, 2.4G + Bluetooth dual mode. 12-month battery life, ergonomic design.', ja: '超静音クリック、2.4G＋ Bluetooth デュアルモード。12ヶ月のバッテリー寿命、人間工学設計。' } },
+    ];
+
+    const coupons = [
+        { code: 'SAVE50', discount: 50, desc: { zh: '滿額折 $50', en: '$50 off', ja: '$50 割引' }, min: 200 },
+        { code: 'VIP100', discount: 100, desc: { zh: 'VIP 折 $100', en: '$100 off', ja: '$100 割引' }, min: 500 },
+        { code: 'WELCOME', discount: 80, desc: { zh: '新會員折 $80', en: '$80 off', ja: '$80 割引' }, min: 300 },
+        { code: 'FREESHIP', discount: 60, desc: { zh: '運費折 $60', en: '$60 off', ja: '$60 割引' }, min: 0 },
+    ];
+
+    let currentLang = localStorage.getItem('store_lang') || 'zh';
+    let cart = {};
+    let currentUser = null;
+    let searchKeyword = '';
+    let appliedCoupon = null;
+    let sellerTab = 'products';
+    let sellerFilter = '';
+
+    function t(key, vars) {
+        let s = (langData[currentLang] && langData[currentLang][key]) || (langData.zh[key]) || key;
+        if (vars) {
+            for (const k in vars) s = s.replace('{' + k + '}', vars[k]);
+        }
+        return s;
+    }
+
+    function pn(product, field) {
+        const v = product[field];
+        return v[currentLang] || v['zh'] || v;
+    }
+
+    function setLang(lang) {
+        if (!langNames.includes(lang)) return;
+        currentLang = lang;
+        localStorage.setItem('store_lang', lang);
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+        applyLang();
+    }
+
+    function applyLang() {
+        document.getElementById('storeTitle').innerHTML = t('title');
+        document.getElementById('cartLabel').textContent = t('cart');
+        document.getElementById('cartPanelTitle').textContent = t('cartPanel');
+        document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+        document.getElementById('searchBtn').textContent = t('searchBtn');
+        document.getElementById('sectionTitle').textContent = t('sectionTitle');
+        document.getElementById('bannerTitle').textContent = t('bannerTitle');
+        document.getElementById('bannerSub').textContent = t('bannerSub');
+        document.getElementById('couponInput').placeholder = t('couponPlaceholder');
+        document.getElementById('couponApplyBtn').textContent = t('couponApply');
+        document.getElementById('cartSubtotalLabel').textContent = t('subtotal');
+        document.getElementById('cartDiscountLabel').textContent = t('discount');
+        document.getElementById('cartTotalLabel').textContent = t('total');
+        document.getElementById('checkoutBtn').textContent = t('checkout');
+        document.getElementById('authTitle').textContent = t('authTitle');
+        document.getElementById('tabLogin').textContent = t('tabLogin');
+        document.getElementById('tabRegister').textContent = t('tabRegister');
+        const scLabel = document.getElementById('sellerCenterLabel');
+        if (scLabel) scLabel.textContent = t('sellerCenter');
+
+        renderUserArea();
+        renderProducts();
+        updateCart();
+        if (document.getElementById('authModal').classList.contains('active')) {
+            const activeTab = document.getElementById('tabLogin').classList.contains('active') ? 'login' : 'register';
+            switchTab(activeTab);
+        }
+        if (document.getElementById('checkoutModal').classList.contains('active')) {
+            renderCheckoutForm();
+        }
+    }
+
+    function getUsers() {
+        return JSON.parse(localStorage.getItem('store_users') || '{}');
+    }
+    function saveUsers(users) {
+        localStorage.setItem('store_users', JSON.stringify(users));
+    }
+    function getSession() {
+        return sessionStorage.getItem('store_session');
+    }
+    function setSession(email) {
+        if (email) sessionStorage.setItem('store_session', email);
+        else sessionStorage.removeItem('store_session');
+    }
+
+    function saveCart() {
+        if (currentUser) {
+            localStorage.setItem('store_cart_' + currentUser.email, JSON.stringify(cart));
+        }
+    }
+
+    function loadCart() {
+        if (currentUser) {
+            const saved = localStorage.getItem('store_cart_' + currentUser.email);
+            cart = saved ? JSON.parse(saved) : {};
+        } else {
+            cart = {};
+        }
+        updateCart();
+    }
+
+    function initAuth() {
+        const email = getSession();
+        if (email) {
+            const users = getUsers();
+            if (users[email]) {
+                currentUser = users[email];
+            } else {
+                setSession(null);
+            }
+        }
+        renderUserArea();
+        loadCart();
+    }
+
+    function renderUserArea() {
+        const area = document.getElementById('userArea');
+        if (currentUser) {
+            area.innerHTML = `
+                <div class="user-info">
+                    <span class="avatar">${currentUser.name[0]}</span>
+                    <span>${currentUser.name}${currentUser.isSeller ? '<span style="font-size:10px;background:#fdd835;color:#333;padding:1px 5px;border-radius:3px;margin-left:4px">🏪</span>' : ''}</span>
+                    <button class="logout-btn" onclick="openOrderHistory()">📋</button>
+                    <button class="logout-btn" onclick="logout()">${t('logout')}</button>
+                </div>
+            `;
+        } else {
+            area.innerHTML = `<button class="header-btn" onclick="openAuth()">${t('userMenu')}</button>`;
+        }
+    }
+
+    function openAuth() {
+        document.getElementById('authModal').classList.add('active');
+        switchTab('login');
+    }
+
+    function closeAuth() {
+        document.getElementById('authModal').classList.remove('active');
+    }
+
+    function switchTab(tab) {
+        document.getElementById('tabLogin').className = tab === 'login' ? 'active' : '';
+        document.getElementById('tabRegister').className = tab === 'register' ? 'active' : '';
+        const form = document.getElementById('authForm');
+        if (tab === 'login') {
+            form.innerHTML = `
+                <div class="form-group">
+                    <label>${t('loginEmailLabel')}</label>
+                    <input type="email" id="loginEmail" placeholder="${t('loginEmailPlaceholder')}">
+                </div>
+                <div class="form-group">
+                    <label>${t('loginPwdLabel')}</label>
+                    <input type="password" id="loginPwd" placeholder="${t('loginPwdPlaceholder')}">
+                </div>
+                <div class="form-error" id="loginError"></div>
+                <button class="submit-btn" onclick="login()">${t('loginBtn')}</button>
+            `;
+        } else {
+            form.innerHTML = `
+                <div class="form-group">
+                    <label>${t('regNameLabel')}</label>
+                    <input type="text" id="regName" placeholder="${t('regNamePlaceholder')}">
+                </div>
+                <div class="form-group">
+                    <label>${t('regEmailLabel')}</label>
+                    <input type="email" id="regEmail" placeholder="${t('regEmailPlaceholder')}">
+                </div>
+                <div class="form-group">
+                    <label>${t('regPwdLabel')}</label>
+                    <input type="password" id="regPwd" placeholder="${t('regPwdPlaceholder')}">
+                </div>
+                <div class="form-error" id="regError"></div>
+                <button class="submit-btn" onclick="register()">${t('regBtn')}</button>
+            `;
+        }
+    }
+
+    function register() {
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const pwd = document.getElementById('regPwd').value;
+        const err = document.getElementById('regError');
+
+        if (!name || !email || !pwd) {
+            err.textContent = t('fillAll'); err.style.display = 'block'; return;
+        }
+        if (pwd.length < 6) {
+            err.textContent = t('pwdTooShort'); err.style.display = 'block'; return;
+        }
+
+        const users = getUsers();
+        if (users[email]) {
+            err.textContent = t('emailRegistered'); err.style.display = 'block'; return;
+        }
+
+        users[email] = { name, email, password: pwd };
+        saveUsers(users);
+        showToast(t('registerSuccess'));
+        switchTab('login');
+        document.getElementById('loginEmail').value = email;
+    }
+
+    function login() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pwd = document.getElementById('loginPwd').value;
+        const err = document.getElementById('loginError');
+
+        if (!email || !pwd) {
+            err.textContent = t('invalidEmailPwd'); err.style.display = 'block'; return;
+        }
+
+        const users = getUsers();
+        const user = users[email];
+        if (!user || user.password !== pwd) {
+            err.textContent = t('wrongEmailPwd'); err.style.display = 'block'; return;
+        }
+
+        saveCart();
+        currentUser = user;
+        setSession(email);
+        renderUserArea();
+        loadCart();
+        appliedCoupon = null;
+        closeAuth();
+        showToast(t('welcomeBack', { name: user.name }));
+    }
+
+    function logout() {
+        saveCart();
+        currentUser = null;
+        setSession(null);
+        cart = {};
+        appliedCoupon = null;
+        renderUserArea();
+        updateCart();
+        showToast(t('loggedOut'));
+    }
+
+    function filterProducts() {
+        const input = document.getElementById('searchInput');
+        searchKeyword = input.value.trim().toLowerCase();
+        renderProducts();
+    }
+
+    function getReviews(productId) {
+        return JSON.parse(localStorage.getItem('store_reviews_' + productId) || '[]');
+    }
+    function saveReviews(productId, reviews) {
+        localStorage.setItem('store_reviews_' + productId, JSON.stringify(reviews));
+    }
+    function getAvgRating(productId) {
+        const reviews = getReviews(productId);
+        if (reviews.length === 0) return 0;
+        return (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+    }
+    function ratingStars(n) {
+        return '★'.repeat(Math.floor(n)) + '☆'.repeat(5 - Math.floor(n));
+    }
+
+    function openDetail(id) {
+        document.getElementById('detailModal').classList.add('active');
+        renderProductDetail(id);
+    }
+    function closeDetail() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+    function renderProductDetail(id) {
+        const p = getProductById(id);
+        if (!p) return;
+        const c = colors[(id * 7) % colors.length];
+        const e = emojis[(id * 7) % emojis.length];
+        const avg = getAvgRating(id);
+        const reviews = getReviews(id);
+        const pname = pn(p, 'name');
+        const pdesc = pn(p, 'desc');
+        const sellerDisplay = p.sellerEmail ? (p.sellerName || t('sellerNameLabel')) : t('officialStore');
+
+        const content = document.getElementById('detailContent');
+        content.innerHTML = `
+            <div class="detail-img" style="background:${c}">${e}</div>
+            <div class="detail-body">
+                <h2>${pname}</h2>
+                <div style="font-size:13px;color:#888;margin-bottom:4px">${t('bySeller')} ${sellerDisplay}</div>
+                <div class="detail-price">${p.price}</div>
+                <div class="detail-meta">
+                    <span>${t('soldPrefix')} ${((p.sold || 0) + getExtraSold(p.id)).toLocaleString()}</span>
+                    <span class="star">${avg > 0 ? ratingStars(avg) + ' ' + avg : t('noRatingText')}</span>
+                </div>
+                <div class="detail-desc">${pdesc}</div>
+                <button class="detail-add-btn" onclick="addToCart(${p.id}); closeDetail();">${t('detailAddCart')}</button>
+                <div class="review-section">
+                    <h3>${t('reviewTitle', { n: reviews.length })}</h3>
+                    <div id="reviewList">
+                        ${reviews.length === 0 ? '<div class="review-empty">' + t('reviewEmpty') + '</div>' :
+                            reviews.map(r => `
+                                <div class="review-item">
+                                    <div><span class="rev-user">${r.name}</span> <span class="rev-star">${ratingStars(r.rating)}</span></div>
+                                    <div class="rev-text">${r.text}</div>
+                                    <div class="rev-date">${r.date}</div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                    <div class="review-form">
+                        <select id="reviewRating">
+                            <option value="5">★★★★★ (5)</option>
+                            <option value="4">★★★★☆ (4)</option>
+                            <option value="3">★★★☆☆ (3)</option>
+                            <option value="2">★★☆☆☆ (2)</option>
+                            <option value="1">★☆☆☆☆ (1)</option>
+                        </select>
+                        <input type="text" id="reviewText" placeholder="${t('reviewPlaceholder')}">
+                        <button onclick="submitReview(${id})">${t('reviewSubmit')}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function submitReview(id) {
+        if (!currentUser) {
+            showToast(t('loginRequiredReview'));
+            closeDetail();
+            setTimeout(() => openAuth(), 400);
+            return;
+        }
+        const rating = parseInt(document.getElementById('reviewRating').value);
+        const text = document.getElementById('reviewText').value.trim();
+        if (!text) { showToast(t('reviewInputRequired')); return; }
+
+        const reviews = getReviews(id);
+        const now = new Date();
+        const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+        reviews.unshift({ name: currentUser.name, rating, text, date: dateStr });
+        saveReviews(id, reviews);
+        renderProductDetail(id);
+        showToast(t('reviewSubmitted'));
+    }
+
+    function renderSellerFilterBar() {
+        const bar = document.getElementById('sellerFilterBar');
+        if (!bar) return;
+        const sellers = getUniqueSellers();
+        bar.innerHTML = `
+            <button class="lang-btn ${sellerFilter === '' ? 'active' : ''}" onclick="setSellerFilter('')">${t('allProducts')}</button>
+            <button class="lang-btn ${sellerFilter === 'official' ? 'active' : ''}" onclick="setSellerFilter('official')">${t('officialProducts')}</button>
+            ${sellers.map(s => `
+                <button class="lang-btn ${sellerFilter === s.email ? 'active' : ''}" onclick="setSellerFilter('${s.email}')">${s.name}</button>
+            `).join('')}
+        `;
+    }
+
+    function renderProducts() {
+        const list = document.getElementById('productList');
+        renderSellerFilterBar();
+
+        let all = getAllProducts();
+        if (sellerFilter === 'official') {
+            all = all.filter(p => !p.sellerEmail);
+        } else if (sellerFilter) {
+            all = all.filter(p => p.sellerEmail === sellerFilter);
+        }
+
+        const kw = searchKeyword.toLowerCase();
+        const filtered = kw
+            ? all.filter(p => pn(p, 'name').toLowerCase().includes(kw))
+            : all;
+
+        const info = document.getElementById('searchInfo');
+        if (searchKeyword) {
+            info.textContent = t('searchResult', { q: document.getElementById('searchInput').value.trim(), n: filtered.length });
+        } else {
+            info.textContent = '';
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#bbb;font-size:15px">' + t('noResult') + '</div>';
+            return;
+        }
+
+        list.innerHTML = filtered.map((p, idx) => {
+            const c = colors[idx % colors.length];
+            const e = emojis[idx % emojis.length];
+            const avg = getAvgRating(p.id);
+            const pname = pn(p, 'name');
+            const sellerDisplay = p.sellerEmail ? (p.sellerName || t('sellerNameLabel')) : t('officialStore');
+            return `
+                <div class="product-card" onclick="openDetail(${p.id})">
+                    <div class="img-wrap" style="background:${c}">${e}</div>
+                    <div class="product-info">
+                        <div class="product-name">${pname}</div>
+                        <div class="product-price">${p.price}</div>
+                        <div style="font-size:11px;color:#888;margin:1px 0">${t('bySeller')} ${sellerDisplay}</div>
+                        <div class="product-sold">${t('soldPrefix')} ${((p.sold || 0) + getExtraSold(p.id)).toLocaleString()}</div>
+                        ${avg > 0 ? '<div class="product-rating">' + ratingStars(avg) + ' ' + avg + '</div>' : ''}
+                        <button class="add-btn" onclick="event.stopPropagation(); addToCart(${p.id})">${t('addCart')}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function addToCart(id) {
+        cart[id] = (cart[id] || 0) + 1;
+        updateCart();
+        saveCart();
+        showToast(t('addCartToast'));
+    }
+
+    function removeFromCart(id) {
+        delete cart[id];
+        updateCart();
+        saveCart();
+    }
+
+    function changeQty(id, delta) {
+        if (!cart[id]) return;
+        cart[id] += delta;
+        if (cart[id] <= 0) delete cart[id];
+        updateCart();
+        saveCart();
+    }
+
+    function getCartTotal() {
+        const ids = Object.keys(cart);
+        return ids.reduce((sum, idStr) => {
+            const id = Number(idStr);
+            const p = getProductById(id);
+            return p ? sum + p.price * cart[id] : sum;
+        }, 0);
+    }
+
+    function getDiscount() {
+        if (!appliedCoupon) return 0;
+        const total = getCartTotal();
+        if (total < appliedCoupon.min) return 0;
+        return appliedCoupon.discount;
+    }
+
+    function quickCoupon(code) {
+        document.getElementById('couponInput').value = code;
+        applyCoupon();
+    }
+
+    function applyCoupon() {
+        const input = document.getElementById('couponInput');
+        const code = input.value.trim().toUpperCase();
+        if (!code) { showToast(t('couponEmpty')); return; }
+
+        const found = coupons.find(c => c.code === code);
+        if (!found) { showToast(t('couponInvalid')); return; }
+
+        const total = getCartTotal();
+        if (total < found.min) {
+            showToast(t('couponMin', { n: found.min }));
+            return;
+        }
+
+        appliedCoupon = found;
+        input.value = '';
+        updateCart();
+        showToast(t('couponApplied', { desc: pn(found, 'desc') }));
+    }
+
+    function removeCoupon() {
+        appliedCoupon = null;
+        updateCart();
+        showToast(t('couponRemoved'));
+    }
+
+    function updateCart() {
+        const count = Object.values(cart).reduce((a, b) => a + b, 0);
+        document.getElementById('cartCount').textContent = count;
+
+        const itemsEl = document.getElementById('cartItems');
+        const ids = Object.keys(cart);
+        if (ids.length === 0) {
+            itemsEl.innerHTML = '<div class="cart-empty">' + t('cartEmpty') + '</div>';
+            appliedCoupon = null;
+        } else {
+            itemsEl.innerHTML = ids.map(idStr => {
+                const id = Number(idStr);
+                const p = getProductById(id);
+                if (!p) return '';
+                const qty = cart[id];
+                const c = colors[(id * 3) % colors.length];
+                const e = emojis[(id * 3) % emojis.length];
+                return `
+                    <div class="cart-item">
+                        <div class="thumb" style="background:${c}">${e}</div>
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${pn(p, 'name')}</div>
+                            <div class="cart-item-price">NT$ ${p.price}</div>
+                            <div class="cart-item-qty">
+                                <button onclick="changeQty(${id}, -1)">−</button>
+                                <span>${qty}</span>
+                                <button onclick="changeQty(${id}, 1)">+</button>
+                            </div>
+                        </div>
+                        <button class="cart-item-remove" onclick="removeFromCart(${id})">&times;</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const subtotal = getCartTotal();
+        const discount = getDiscount();
+        const total = subtotal - discount;
+
+        document.getElementById('cartSubtotal').textContent = 'NT$ ' + subtotal;
+
+        const discountRow = document.getElementById('cartDiscountRow');
+        const discountEl = document.getElementById('cartDiscount');
+        if (discount > 0) {
+            discountRow.style.display = 'flex';
+            discountEl.textContent = '-NT$ ' + discount;
+        } else {
+            discountRow.style.display = 'none';
+        }
+        document.getElementById('cartTotal').textContent = 'NT$ ' + total;
+
+        const couponStatus = document.getElementById('couponStatus');
+        if (appliedCoupon) {
+            const active = discount > 0;
+            const desc = pn(appliedCoupon, 'desc');
+            couponStatus.innerHTML = '<div class="coupon-applied"><span>' + (active ? '✅' : '⏳') + ' ' + desc + (active ? '' : ' ' + t('couponBelowMin')) + '</span><button onclick="removeCoupon()">' + t('couponRemove') + '</button></div>';
+        } else if (ids.length > 0) {
+            couponStatus.innerHTML = '<div style="font-size:12px;color:#999;margin-bottom:8px">' + t('couponHint') + coupons.map(c => '<span style="cursor:pointer;color:#ee4d2d;font-weight:600;text-decoration:underline" onclick="quickCoupon(\'' + c.code + '\')">' + c.code + '</span>').join(' / ') + '</div>';
+        } else {
+            couponStatus.innerHTML = '';
+        }
+    }
+
+    function toggleCart() {
+        document.getElementById('cartOverlay').classList.toggle('active');
+        document.getElementById('cartPanel').classList.toggle('open');
+    }
+
+    function openCheckout() {
+        document.getElementById('checkoutModal').classList.add('active');
+        renderCheckoutForm();
+    }
+
+    function closeCheckout() {
+        document.getElementById('checkoutModal').classList.remove('active');
+    }
+
+    function renderCheckoutForm() {
+        const ids = Object.keys(cart);
+        const subtotal = getCartTotal();
+        const discount = getDiscount();
+        const total = subtotal - discount;
+        const count = ids.reduce((s, id) => s + cart[id], 0);
+        const ship = 0;
+
+        const payMethods = [
+            { value: 'cc', label: t('payCCLabel'), display: t('payCC') },
+            { value: 'atm', label: t('payATMLabel'), display: t('payATM') },
+            { value: 'cod', label: t('payCODLabel'), display: t('payCOD') },
+        ];
+
+        const el = document.getElementById('checkoutContent');
+        el.innerHTML = `
+            <h2>${t('checkoutTitle')}</h2>
+            <div class="checkout-layout">
+                <div class="checkout-left">
+                    <h3>📦 ${t('shipRecipient')}</h3>
+                    <div class="checkout-row">
+                        <div class="form-group">
+                            <label>${t('shipRecipient')}</label>
+                            <input type="text" id="shipName" value="${currentUser ? currentUser.name : ''}" placeholder="${t('shipRecipientPlaceholder')}">
+                        </div>
+                        <div class="form-group">
+                            <label>${t('shipPhone')}</label>
+                            <input type="tel" id="shipPhone" placeholder="${t('shipPhonePlaceholder')}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>${t('shipAddress')}</label>
+                        <input type="text" id="shipAddress" placeholder="${t('shipAddressPlaceholder')}">
+                    </div>
+                    <h3>💳 ${t('paymentMethod')}</h3>
+                    <div class="payment-options" onchange="toggleCardFields()">
+                        ${payMethods.map((m, i) => `
+                            <label>
+                                <input type="radio" name="payment" value="${m.value}" ${i === 0 ? 'checked' : ''}>
+                                <span>${m.display}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div class="card-fields" id="cardFields">
+                        <div class="card-row">
+                            <div class="form-group" style="flex:2">
+                                <label>信用卡號</label>
+                                <input type="text" id="cardNumber" maxlength="19" placeholder="1234 5678 9012 3456" oninput="formatCardNumber(this)">
+                            </div>
+                        </div>
+                        <div class="card-row">
+                            <div class="form-group">
+                                <label>有效月年</label>
+                                <input type="text" id="cardExpiry" maxlength="7" placeholder="MM / YY">
+                            </div>
+                            <div class="form-group">
+                                <label>安全碼 (CVV)</label>
+                                <input type="text" id="cardCvv" maxlength="4" placeholder="123">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="checkout-right">
+                    <div class="checkout-summary">
+                        <div class="cs-items">${t('orderItems', { n: count })}</div>
+                        ${ids.map(idStr => {
+                            const id = Number(idStr);
+                            const p = getProductById(id);
+                            if (!p) return '';
+                            const qty = cart[id];
+                            const sellerTag = p.sellerEmail ? ' <span style="font-size:11px;color:#999">[' + (p.sellerName || '') + ']</span>' : '';
+                            return '<div class="cs-row"><span>' + pn(p, 'name') + sellerTag + ' × ' + qty + '</span><span>NT$ ' + (p.price * qty) + '</span></div>';
+                        }).join('')}
+                        <div class="cs-row">${t('orderSubtotal')}<span>NT$ ${subtotal}</span></div>
+                        ${discount > 0 ? '<div class="cs-row cs-discount">' + t('orderDiscount') + '<span>-NT$ ' + discount + '</span></div>' : ''}
+                        <div class="cs-row">${t('orderShipping')}<span>${ship === 0 ? t('orderFree') : 'NT$ ' + ship}</span></div>
+                        <div class="cs-row cs-total">${t('orderTotal')}<span>NT$ ${total}</span></div>
+                    </div>
+                    <button class="place-order-btn" onclick="placeOrder()">${t('placeOrder')}</button>
+                </div>
+            </div>
+        `;
+        toggleCardFields();
+    }
+
+    function toggleCardFields() {
+        const cc = document.querySelector('input[name="payment"]:checked')?.value === 'cc';
+        document.getElementById('cardFields').classList.toggle('show', cc);
+    }
+
+    function formatCardNumber(el) {
+        let v = el.value.replace(/\D/g, '').substring(0, 16);
+        el.value = v.replace(/(.{4})/g, '$1 ').trim();
+    }
+
+    function placeOrder() {
+        const name = document.getElementById('shipName').value.trim();
+        const phone = document.getElementById('shipPhone').value.trim();
+        const address = document.getElementById('shipAddress').value.trim();
+        const payment = document.querySelector('input[name="payment"]:checked');
+
+        if (!name || !phone || !address) {
+            showToast(t('fillAll')); return;
+        }
+        if (!payment) { showToast(t('fillAll')); return; }
+
+        if (payment.value === 'cc') {
+            const cn = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            const exp = document.getElementById('cardExpiry').value.trim();
+            const cvv = document.getElementById('cardCvv').value.trim();
+            if (cn.length < 13 || cn.length > 16) { showToast('請輸入有效的信用卡號'); return; }
+            if (!/^\d{2}\s*\/\s*\d{2}$/.test(exp)) { showToast('請輸入有效月年 (MM/YY)'); return; }
+            if (cvv.length < 3) { showToast('請輸入安全碼'); return; }
+        }
+
+        const payLabel = payment.value === 'cc' ? t('payCC') : payment.value === 'atm' ? t('payATM') : t('payCOD');
+        const ids = Object.keys(cart);
+        const subtotal = getCartTotal();
+        const discount = getDiscount();
+        const total = subtotal - discount;
+        const count = ids.reduce((s, id) => s + cart[id], 0);
+        const orderId = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+
+        const cardInfo = payment.value === 'cc' ? {
+            last4: document.getElementById('cardNumber').value.replace(/\s/g, '').slice(-4),
+            expiry: document.getElementById('cardExpiry').value.trim(),
+        } : null;
+
+        const order = {
+            id: orderId,
+            date: new Date().toISOString(),
+            items: ids.map(idStr => {
+                const id = Number(idStr);
+                const p = getProductById(id);
+                return { id, name: pn(p, 'name'), price: p.price, qty: cart[id], sellerEmail: p.sellerEmail, sellerName: p.sellerName, status: 'pending' };
+            }),
+            subtotal, discount, total, shipping: 0,
+            recipient: name, phone, address,
+            payment: payLabel, cardInfo,
+        };
+
+        const orders = JSON.parse(localStorage.getItem('store_orders_' + currentUser.email) || '[]');
+        orders.unshift(order);
+        localStorage.setItem('store_orders_' + currentUser.email, JSON.stringify(orders));
+
+        const content = document.getElementById('checkoutContent');
+        content.innerHTML = `
+            <div class="order-confirm">
+                <div class="oc-icon">🎉</div>
+                <h2>${t('confirmTitle')}</h2>
+                <p>${t('confirmMsg')}</p>
+                <div class="oc-details">
+                    ${t('confirmNum', { n: orderId })}<br>
+                    ${t('confirmShip', { addr: address })}<br>
+                    ${t('confirmPay', { pay: payLabel })}${cardInfo ? '<br>💳 **** ' + cardInfo.last4 + ' (' + cardInfo.expiry + ')' : ''}<br>
+                    ${t('orderTotal')}：NT$ ${total}
+                </div>
+                <button class="oc-btn" onclick="closeCheckout(); clearCartAfterOrder()">${t('confirmBack')}</button>
+            </div>
+        `;
+    }
+
+    function clearCartAfterOrder() {
+        cart = {};
+        appliedCoupon = null;
+        updateCart();
+        saveCart();
+    }
+
+    function checkout() {
+        if (!currentUser) {
+            showToast(t('loginRequired'));
+            closeAuth();
+            setTimeout(() => openAuth(), 300);
+            return;
+        }
+        const count = Object.values(cart).reduce((a, b) => a + b, 0);
+        if (count === 0) { showToast(t('checkoutEmpty')); return; }
+        toggleCart();
+        setTimeout(() => openCheckout(), 350);
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // --- Seller Functions ---
+    function getSellerProducts() {
+        return JSON.parse(localStorage.getItem('store_seller_products') || '[]');
+    }
+    function saveSellerProducts(arr) {
+        localStorage.setItem('store_seller_products', JSON.stringify(arr));
+    }
+    function getAllProducts() {
+        const official = products.map((p, i) => ({ ...p, sellerEmail: null, sellerName: null, _origIdx: i }));
+        const sellerProds = getSellerProducts().filter(p => p.sellerEmail);
+        return [...official, ...sellerProds];
+    }
+    function getProductById(id) {
+        return getAllProducts().find(p => p.id === id);
+    }
+    function getUniqueSellers() {
+        const sp = getSellerProducts();
+        const map = {};
+        sp.forEach(p => { if (p.sellerEmail) map[p.sellerEmail] = p.sellerName; });
+        return Object.keys(map).map(email => ({ email, name: map[email] }));
+    }
+    function setSellerFilter(email) {
+        sellerFilter = email;
+        renderProducts();
+    }
+    function openSellerDashboard() {
+        if (!currentUser) {
+            showToast(t('loginRequired'));
+            setTimeout(() => openAuth(), 300);
+            return;
+        }
+        document.getElementById('sellerModal').classList.add('active');
+        renderSellerDashboard();
+    }
+    function closeSellerDashboard() {
+        document.getElementById('sellerModal').classList.remove('active');
+    }
+    function becomeSeller() {
+        currentUser.isSeller = true;
+        const users = getUsers();
+        users[currentUser.email].isSeller = true;
+        saveUsers(users);
+        renderSellerDashboard();
+        renderUserArea();
+        showToast('✅ ' + t('becomeSeller') + '!');
+    }
+    function renderSellerDashboard() {
+        if (!currentUser) return;
+        const content = document.getElementById('sellerContent');
+        if (!currentUser.isSeller) {
+            content.innerHTML = `
+                <div style="text-align:center;padding:60px 24px">
+                    <div style="font-size:56px;margin-bottom:12px">🏪</div>
+                    <h2 style="font-size:20px;margin-bottom:8px">${t('sellerDashboard')}</h2>
+                    <p style="color:#888;font-size:14px;margin-bottom:20px">${t('sellerDashboard')}</p>
+                    <button class="submit-btn" onclick="becomeSeller()" style="width:auto;padding:12px 36px;font-size:15px">${t('becomeSeller')}</button>
+                </div>
+            `;
+            return;
+        }
+        content.innerHTML = `
+            <div style="padding:20px 24px 0">
+                <div style="display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:16px">
+                    <button class="seller-tab" onclick="switchSellerTab('products')" style="flex:1;padding:10px 14px;background:none;border:none;border-bottom:2px solid ${sellerTab === 'products' ? '#ee4d2d' : 'transparent'};margin-bottom:-2px;cursor:pointer;font-size:15px;font-weight:600;color:${sellerTab === 'products' ? '#ee4d2d' : '#999'};transition:all 0.3s">${t('sellerProducts')}</button>
+                    <button class="seller-tab" onclick="switchSellerTab('orders')" style="flex:1;padding:10px 14px;background:none;border:none;border-bottom:2px solid ${sellerTab === 'orders' ? '#ee4d2d' : 'transparent'};margin-bottom:-2px;cursor:pointer;font-size:15px;font-weight:600;color:${sellerTab === 'orders' ? '#ee4d2d' : '#999'};transition:all 0.3s">${t('sellerOrders')}</button>
+                </div>
+            </div>
+            <div style="padding:0 24px 20px" id="sellerTabContent"></div>
+        `;
+        renderSellerTabContent();
+    }
+    function switchSellerTab(tab) {
+        sellerTab = tab;
+        renderSellerDashboard();
+    }
+    function renderSellerTabContent() {
+        const el = document.getElementById('sellerTabContent');
+        if (!el) return;
+        if (sellerTab === 'products') {
+            const list = getSellerProductsForUser();
+            el.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                    <span style="font-size:14px;color:#888">${list.length} ${t('sellerProducts')}</span>
+                    <button class="submit-btn" onclick="showSellerProductForm()" style="width:auto;padding:7px 16px;font-size:13px">+ ${t('addProduct')}</button>
+                </div>
+                <div id="sellerProductList"></div>
+            `;
+            renderSellerProductList();
+        } else {
+            const orders = getSellerOrders();
+            if (orders.length === 0) {
+                el.innerHTML = '<div style="text-align:center;padding:60px 0;color:#bbb;font-size:14px">' + t('sellerOrderEmpty') + '</div>';
+            } else {
+                el.innerHTML = '<div id="sellerOrderList"></div>';
+                renderSellerOrderList(orders);
+            }
+        }
+    }
+    function getSellerProductsForUser() {
+        return getSellerProducts().filter(p => p.sellerEmail === currentUser.email);
+    }
+    function renderSellerProductList() {
+        const list = document.getElementById('sellerProductList');
+        if (!list) return;
+        const items = getSellerProductsForUser();
+        if (items.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:40px 0;color:#bbb;font-size:14px">' + t('noSellerProducts') + '</div>';
+            return;
+        }
+        list.innerHTML = items.map(p => {
+            const c = colors[(p._colorIdx || 9) % colors.length];
+            const e = p._emoji || '📦';
+            return `
+                <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;align-items:center">
+                    <div style="width:48px;height:48px;border-radius:6px;background:${c};display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0">${e}</div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+                        <div style="color:#ee4d2d;font-size:15px;font-weight:600">NT$ ${p.price}</div>
+                        <div style="font-size:12px;color:#999">${t('soldPrefix')} ${(p.sold || 0).toLocaleString()}</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0">
+                        <button class="header-btn" onclick="showSellerProductForm(${p.id})" style="background:#f0f0f0;color:#333;padding:5px 10px;font-size:12px">${t('editProduct')}</button>
+                        <button class="header-btn" onclick="deleteSellerProduct(${p.id})" style="background:#fee;color:#ee4d2d;padding:5px 10px;font-size:12px">${t('deleteProduct')}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    function showSellerProductForm(id) {
+        hideSellerProductForm();
+        editingProductId = id || null;
+        const p = id ? getSellerProductsForUser().find(x => x.id === id) : null;
+        const el = document.getElementById('sellerTabContent');
+        const div = document.createElement('div');
+        div.id = 'sellerProductForm';
+        div.innerHTML = `
+            <h3 style="font-size:16px;margin-bottom:12px;margin-top:8px">${p ? t('editProduct') : t('addProduct')}</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="grid-column:1/-1">
+                    <label>${t('productName')}</label>
+                    <input type="text" id="sellerFormName" value="${p ? p.name : ''}" placeholder="商品名稱">
+                </div>
+                <div class="form-group">
+                    <label>${t('productPrice')} (NT$)</label>
+                    <input type="number" id="sellerFormPrice" value="${p ? p.price : ''}" placeholder="299" min="1">
+                </div>
+                <div class="form-group">
+                    <label>${t('soldPrefix')}</label>
+                    <input type="number" id="sellerFormSold" value="${p ? (p.sold || 0) : 0}" min="0">
+                </div>
+                <div class="form-group" style="grid-column:1/-1">
+                    <label>${t('productDesc')}</label>
+                    <textarea id="sellerFormDesc" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:4px;font-size:14px;resize:vertical;min-height:60px">${p ? p.desc : ''}</textarea>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="submit-btn" onclick="saveSellerProductForm()" style="padding:8px 24px;font-size:14px">${t('saveProduct')}</button>
+                <button class="header-btn" onclick="hideSellerProductForm()" style="background:#f0f0f0;color:#333;padding:8px 24px;font-size:14px">${t('cancel')}</button>
+            </div>
+        `;
+        el.appendChild(div);
+    }
+    function hideSellerProductForm() {
+        const form = document.getElementById('sellerProductForm');
+        if (form) form.remove();
+        editingProductId = null;
+    }
+    function saveSellerProductForm() {
+        const name = document.getElementById('sellerFormName').value.trim();
+        const price = parseInt(document.getElementById('sellerFormPrice').value);
+        const desc = document.getElementById('sellerFormDesc').value.trim();
+        const sold = parseInt(document.getElementById('sellerFormSold').value) || 0;
+        if (!name || !price || !desc) {
+            showToast(t('fillAll')); return;
+        }
+        const all = getSellerProducts();
+        if (editingProductId) {
+            const idx = all.findIndex(p => p.id === editingProductId && p.sellerEmail === currentUser.email);
+            if (idx >= 0) {
+                all[idx].name = name;
+                all[idx].price = price;
+                all[idx].desc = desc;
+                all[idx].sold = sold;
+            }
+        } else {
+            const maxId = all.reduce((m, p) => Math.max(m, p.id), 999);
+            all.push({
+                id: maxId + 1, name, price, desc, sold: sold || 0,
+                sellerEmail: currentUser.email,
+                sellerName: currentUser.name,
+                _colorIdx: (all.length + 7) % colors.length,
+                _emoji: emojis[(all.length + 7) % emojis.length],
+            });
+        }
+        saveSellerProducts(all);
+        hideSellerProductForm();
+        renderSellerProductList();
+        renderProducts();
+        showToast(t('productSaved'));
+    }
+    function deleteSellerProduct(id) {
+        if (!confirm(t('confirmDeleteProduct'))) return;
+        const all = getSellerProducts().filter(p => !(p.id === id && p.sellerEmail === currentUser.email));
+        saveSellerProducts(all);
+        renderSellerProductList();
+        renderProducts();
+        showToast(t('productDeleted'));
+    }
+    function getSellerOrders() {
+        const users = getUsers();
+        const allOrders = [];
+        for (const email in users) {
+            const orders = JSON.parse(localStorage.getItem('store_orders_' + email) || '[]');
+            orders.forEach(o => {
+                const sellerItems = o.items.filter(item => {
+                    return getSellerProducts().some(sp => sp.id === item.id && sp.sellerEmail === currentUser.email);
+                });
+                if (sellerItems.length > 0) {
+                    allOrders.push({ ...o, buyerEmail: email, buyerName: users[email].name, sellerItems });
+                }
+            });
+        }
+        return allOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    function shipOrder(orderId, buyerEmail, itemId) {
+        const orders = JSON.parse(localStorage.getItem('store_orders_' + buyerEmail) || '[]');
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+            const item = order.items.find(i => i.id === itemId);
+            if (item) item.status = 'shipped';
+            localStorage.setItem('store_orders_' + buyerEmail, JSON.stringify(orders));
+        }
+        renderSellerTabContent();
+        showToast(t('shipSuccess'));
+    }
+
+    function renderSellerOrderList(orders) {
+        const el = document.getElementById('sellerOrderList');
+        if (!el) return;
+        el.innerHTML = orders.map(o => `
+            <div style="background:#fafafa;border-radius:8px;padding:14px 16px;margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <span style="font-size:13px;font-weight:600">${o.id}</span>
+                    <span style="font-size:12px;color:#bbb">${new Date(o.date).toLocaleDateString()}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <div style="font-size:13px;color:#333">👤 ${o.buyerName}</div>
+                    <div style="font-size:12px;color:#888">💳 ${o.payment}</div>
+                </div>
+                <div style="font-size:13px;color:#666;margin-bottom:6px">📍 ${o.address}</div>
+                <div style="margin-top:4px;font-size:13px;border-top:1px solid #eee;padding-top:6px">
+                    ${o.sellerItems.map(item => {
+                        const shipped = item.status === 'shipped';
+                        return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                            <span>${item.name} × ${item.qty} — NT$${item.price * item.qty}</span>
+                            <span style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                                <span style="font-size:12px;padding:2px 6px;border-radius:3px;${shipped ? 'background:#e8f5e9;color:#2e7d32' : 'background:#fff8e1;color:#f57f17'}">${shipped ? t('statusShipped') : t('statusPending')}</span>
+                                ${!shipped ? `<button class="header-btn" onclick="shipOrder('${o.id}','${o.buyerEmail}',${item.id})" style="background:#ee4d2d;color:#fff;padding:3px 10px;font-size:11px;border:none;border-radius:3px;cursor:pointer">${t('shipOrder')}</button>` : ''}
+                            </span>
+                        </div>`;
+                    }).join('')}
+                </div>
+                <div style="margin-top:4px;font-size:13px;font-weight:600;color:#ee4d2d">${t('orderTotal')}：NT$ ${o.sellerItems.reduce((s, i) => s + i.price * i.qty, 0)}</div>
+            </div>
+        `).join('');
+    }
+
+    // --- Order History (Buyer) ---
+    function openOrderHistory() {
+        document.getElementById('orderHistoryModal').classList.add('active');
+        renderOrderHistory();
+    }
+    function closeOrderHistory() {
+        document.getElementById('orderHistoryModal').classList.remove('active');
+    }
+    function getExtraSold(productId) {
+        return JSON.parse(localStorage.getItem('store_extra_sold') || '{}')[productId] || 0;
+    }
+    function addExtraSold(productId, qty) {
+        const data = JSON.parse(localStorage.getItem('store_extra_sold') || '{}');
+        data[productId] = (data[productId] || 0) + qty;
+        localStorage.setItem('store_extra_sold', JSON.stringify(data));
+    }
+    function completeOrderItem(orderId, itemId, orderIdx) {
+        const orders = JSON.parse(localStorage.getItem('store_orders_' + currentUser.email) || '[]');
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return;
+        const item = order.items.find(i => i.id === itemId);
+        if (!item) return;
+        if (item.status !== 'shipped') return;
+        const product = getProductById(itemId);
+        if (!product) return;
+        const pname = pn(product, 'name');
+        const el = document.getElementById('orderHistoryContent');
+        const reviewDiv = document.createElement('div');
+        reviewDiv.id = 'reviewInline_' + itemId;
+        reviewDiv.style.cssText = 'background:#fff;border:1px solid #eee;border-radius:6px;padding:12px;margin:8px 0';
+        reviewDiv.innerHTML = `
+            <div style="font-size:14px;font-weight:600;margin-bottom:8px">📝 ${t('reviewTitle', { n: 0 })} — ${pname}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <select id="reviewRating_${itemId}" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+                    <option value="5">★★★★★ (5)</option>
+                    <option value="4">★★★★☆ (4)</option>
+                    <option value="3">★★★☆☆ (3)</option>
+                    <option value="2">★★☆☆☆ (2)</option>
+                    <option value="1">★☆☆☆☆ (1)</option>
+                </select>
+                <input type="text" id="reviewText_${itemId}" placeholder="${t('reviewPlaceholder')}" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+                <button onclick="submitOrderReview('${orderId}',${itemId},${item.qty})" style="padding:7px 16px;background:#ee4d2d;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px">${t('reviewSubmit')}</button>
+                <button onclick="cancelOrderReview(${itemId})" style="padding:7px 12px;background:#f0f0f0;color:#333;border:none;border-radius:4px;cursor:pointer;font-size:13px">${t('cancel')}</button>
+            </div>
+        `;
+        el.insertBefore(reviewDiv, el.children[orderIdx + 1] || null);
+    }
+    function cancelOrderReview(itemId) {
+        const el = document.getElementById('reviewInline_' + itemId);
+        if (el) el.remove();
+    }
+    function submitOrderReview(orderId, itemId, qty) {
+        const rating = parseInt(document.getElementById('reviewRating_' + itemId).value);
+        const text = document.getElementById('reviewText_' + itemId).value.trim();
+        if (!text) { showToast(t('reviewInputRequired')); return; }
+        const orders = JSON.parse(localStorage.getItem('store_orders_' + currentUser.email) || '[]');
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return;
+        const item = order.items.find(i => i.id === itemId);
+        if (!item) return;
+        item.status = 'completed';
+        localStorage.setItem('store_orders_' + currentUser.email, JSON.stringify(orders));
+        const product = getProductById(itemId);
+        if (product) {
+            const now = new Date();
+            const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+            const reviews = JSON.parse(localStorage.getItem('store_reviews_' + itemId) || '[]');
+            reviews.unshift({ name: currentUser.name, rating, text, date: dateStr });
+            localStorage.setItem('store_reviews_' + itemId, JSON.stringify(reviews));
+            const sp = getSellerProducts();
+            const sellerProd = sp.find(p => p.id === itemId);
+            if (sellerProd) {
+                sellerProd.sold = (sellerProd.sold || 0) + qty;
+                saveSellerProducts(sp);
+            } else {
+                addExtraSold(itemId, qty);
+            }
+        }
+        cancelOrderReview(itemId);
+        renderOrderHistory();
+        renderProducts();
+        renderSellerProductList();
+        showToast(t('reviewSubmitted'));
+    }
+    function renderOrderHistory() {
+        const el = document.getElementById('orderHistoryContent');
+        if (!currentUser) { el.innerHTML = '<p style="text-align:center;color:#888;padding:40px 0">' + t('loginRequired') + '</p>'; return; }
+        const orders = JSON.parse(localStorage.getItem('store_orders_' + currentUser.email) || '[]');
+        if (orders.length === 0) {
+            el.innerHTML = '<div style="text-align:center;padding:60px 0;color:#bbb;font-size:15px">' + t('noOrders') + '</div>';
+            return;
+        }
+        el.innerHTML = '<h2 style="font-size:20px;margin-bottom:16px">' + t('myOrders') + '</h2>' +
+            orders.map((o, oi) => {
+                const ts = new Date(o.date);
+                const hasCompletable = o.items.some(i => i.status === 'shipped');
+                return `
+                    <div style="background:#fafafa;border-radius:8px;padding:14px 16px;margin-bottom:6px" data-order-idx="${oi}">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                            <span style="font-size:12px;font-weight:600">${o.id}</span>
+                            <span style="font-size:12px;color:#bbb">${ts.toLocaleDateString()} ${ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+                        </div>
+                        ${o.items.map(item => {
+                            const shipped = item.status === 'shipped';
+                            const completed = item.status === 'completed';
+                            const sellerTag = item.sellerName ? '<span style="font-size:11px;color:#999"> [' + item.sellerName + ']</span>' : '';
+                            let statusHtml;
+                            if (completed) {
+                                statusHtml = '<span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#e8f5e9;color:#2e7d32">' + t('statusCompleted') + '</span>';
+                            } else if (shipped) {
+                                statusHtml = '<span style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#e3f2fd;color:#1565c0">' + t('statusShipped') + '</span><button onclick="completeOrderItem(\'' + o.id + '\',' + item.id + ',' + oi + ')" style="padding:3px 8px;background:#27ae60;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;white-space:nowrap">' + t('completeOrder') + '</button></span>';
+                            } else {
+                                statusHtml = '<span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#fff8e1;color:#f57f17">' + t('statusPending') + '</span>';
+                            }
+                            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0f0">
+                                <div style="font-size:13px">${item.name}${sellerTag} × ${item.qty}</div>
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <span style="font-size:13px;color:#ee4d2d">NT$${item.price * item.qty}</span>
+                                    ${statusHtml}
+                                </div>
+                            </div>`;
+                        }).join('')}
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:#666;margin-top:6px">
+                            <span>📍 ${o.address}</span>
+                            <span>💳 ${o.payment}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#ee4d2d;margin-top:4px;padding-top:6px;border-top:1px solid #eee">
+                            <span>${t('orderTotal')}</span>
+                            <span>NT$ ${o.total}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+    initAuth();
+    renderProducts();
+    applyLang();
+</script>
+</body>
+</html>
