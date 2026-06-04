@@ -817,10 +817,12 @@
         const pname = pn(p, 'name');
         const pdesc = pn(p, 'desc');
         const sellerDisplay = p.sellerEmail ? (p.sellerName || t('sellerNameLabel')) : t('officialStore');
+        const dImgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center` : `background:${c}`;
+        const dImgContent = p.image ? '' : e;
 
         const content = document.getElementById('detailContent');
         content.innerHTML = `
-            <div class="detail-img" style="background:${c}">${e}</div>
+            <div class="detail-img" style="${dImgStyle}">${dImgContent}</div>
             <div class="detail-body">
                 <h2>${pname}</h2>
                 <div style="font-size:13px;color:#888;margin-bottom:4px">${t('bySeller')} ${sellerDisplay}</div>
@@ -927,9 +929,11 @@
             const avg = getAvgRating(p.id);
             const pname = pn(p, 'name');
             const sellerDisplay = p.sellerEmail ? (p.sellerName || t('sellerNameLabel')) : t('officialStore');
+            const gImgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center` : `background:${c}`;
+            const gImgContent = p.image ? '' : e;
             return `
                 <div class="product-card" onclick="openDetail(${p.id})">
-                    <div class="img-wrap" style="background:${c}">${e}</div>
+                    <div class="img-wrap" style="${gImgStyle}">${gImgContent}</div>
                     <div class="product-info">
                         <div class="product-name">${pname}</div>
                         <div class="product-price">${p.price}</div>
@@ -1028,9 +1032,11 @@
                 const qty = cart[id];
                 const c = colors[(id * 3) % colors.length];
                 const e = emojis[(id * 3) % emojis.length];
+                const tImgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center` : `background:${c}`;
+                const tImgContent = p.image ? '' : e;
                 return `
                     <div class="cart-item">
-                        <div class="thumb" style="background:${c}">${e}</div>
+                        <div class="thumb" style="${tImgStyle}">${tImgContent}</div>
                         <div class="cart-item-info">
                             <div class="cart-item-name">${pn(p, 'name')}</div>
                             <div class="cart-item-price">NT$ ${p.price}</div>
@@ -1391,9 +1397,11 @@
         list.innerHTML = items.map(p => {
             const c = colors[(p._colorIdx || 9) % colors.length];
             const e = p._emoji || '📦';
+            const sImgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center` : `background:${c}`;
+            const sImgContent = p.image ? '' : e;
             return `
                 <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;align-items:center">
-                    <div style="width:48px;height:48px;border-radius:6px;background:${c};display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0">${e}</div>
+                    <div style="width:48px;height:48px;border-radius:6px;${sImgStyle};display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0">${sImgContent}</div>
                     <div style="flex:1;min-width:0">
                         <div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
                         <div style="color:#ee4d2d;font-size:15px;font-weight:600">NT$ ${p.price}</div>
@@ -1407,6 +1415,19 @@
             `;
         }).join('');
     }
+    function readSellerImage(input) {
+        const preview = document.getElementById('sellerImagePreview');
+        const hidden = document.getElementById('sellerFormImageData');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                hidden.value = e.target.result;
+                preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
     function showSellerProductForm(id) {
         hideSellerProductForm();
         editingProductId = id || null;
@@ -1419,7 +1440,7 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div class="form-group" style="grid-column:1/-1">
                     <label>${t('productName')}</label>
-                    <input type="text" id="sellerFormName" value="${p ? p.name : ''}" placeholder="商品名稱">
+                    <input type="text" id="sellerFormName" value="${p ? p.name.replace(/'/g, '\\\'') : ''}" placeholder="商品名稱">
                 </div>
                 <div class="form-group">
                     <label>${t('productPrice')} (NT$)</label>
@@ -1433,6 +1454,12 @@
                     <label>${t('productDesc')}</label>
                     <textarea id="sellerFormDesc" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:4px;font-size:14px;resize:vertical;min-height:60px">${p ? p.desc : ''}</textarea>
                 </div>
+                <div class="form-group" style="grid-column:1/-1">
+                    <label>商品圖片</label>
+                    <input type="file" id="sellerFormImage" accept="image/*" onchange="readSellerImage(this)">
+                    <input type="hidden" id="sellerFormImageData" value="">
+                    <div id="sellerImagePreview" style="margin-top:6px;width:80px;height:80px;border-radius:6px;overflow:hidden;display:none;background:#f0f0f0"></div>
+                </div>
             </div>
             <div style="display:flex;gap:8px">
                 <button class="submit-btn" onclick="saveSellerProductForm()" style="padding:8px 24px;font-size:14px">${t('saveProduct')}</button>
@@ -1440,6 +1467,12 @@
             </div>
         `;
         el.appendChild(div);
+        if (p && p.image) {
+            document.getElementById('sellerFormImageData').value = p.image;
+            const prev = document.getElementById('sellerImagePreview');
+            prev.innerHTML = `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">`;
+            prev.style.display = 'block';
+        }
     }
     function hideSellerProductForm() {
         const form = document.getElementById('sellerProductForm');
@@ -1451,6 +1484,7 @@
         const price = parseInt(document.getElementById('sellerFormPrice').value);
         const desc = document.getElementById('sellerFormDesc').value.trim();
         const sold = parseInt(document.getElementById('sellerFormSold').value) || 0;
+        const image = document.getElementById('sellerFormImageData').value || null;
         if (!name || !price || !desc) {
             showToast(t('fillAll')); return;
         }
@@ -1462,6 +1496,7 @@
                 all[idx].price = price;
                 all[idx].desc = desc;
                 all[idx].sold = sold;
+                all[idx].image = image;
             }
         } else {
             const maxId = all.reduce((m, p) => Math.max(m, p.id), 999);
@@ -1469,6 +1504,7 @@
                 id: maxId + 1, name, price, desc, sold: sold || 0,
                 sellerEmail: currentUser.email,
                 sellerName: currentUser.name,
+                image,
                 _colorIdx: (all.length + 7) % colors.length,
                 _emoji: emojis[(all.length + 7) % emojis.length],
             });
