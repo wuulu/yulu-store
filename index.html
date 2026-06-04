@@ -191,6 +191,7 @@
             <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
             <button class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
             <div id="userArea"></div>
+            <button class="header-btn" onclick="openGame()" id="gameBtn">🎰 <span id="gameLabel">玩遊戲</span></button>
             <button class="header-btn" onclick="openSellerDashboard()" id="sellerCenterBtn">🏪 <span id="sellerCenterLabel">賣家中心</span></button>
             <button class="header-btn cart-btn" onclick="toggleCart()">
                 🛒 <span id="cartLabel">購物車</span> <span class="cart-count" id="cartCount">0</span>
@@ -285,6 +286,13 @@
     </div>
 </div>
 
+<div class="detail-modal" id="gameModal" onclick="if(event.target===this)closeGame()">
+    <div class="detail-box" style="width:420px;max-width:92vw">
+        <button class="detail-close" onclick="closeGame()">&times;</button>
+        <div id="gameContent" style="min-height:260px"></div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -360,6 +368,11 @@
             statusPending: '⏳ 待出貨', statusShipped: '✅ 已出貨', statusCompleted: '✅ 已完成',
             shipOrder: '出貨', confirmShip: '確認出貨？', shipSuccess: '✅ 已出貨',
             completeOrder: '完成訂單', completeAndReview: '完成訂單並評價',
+            playGame: '🎮 玩遊戲', gameTitle: '🎰 轉轉樂',
+            spin: '旋轉', spinning: '旋轉中...',
+            youWin: '🎉 恭喜中獎！', winCoupon: '獲得 {code}（折 NT${discount}）',
+            couponAutoApplied: '✅ 折價券已自動套用到購物車', tryAgain: '沒中獎',
+            comeTomorrow: '每日一次免費遊玩機會', playedToday: '今日已玩過，明天再來！',
         },
         en: {
             title: 'Yulu Shop <span>｜Free Shipping</span>',
@@ -429,6 +442,11 @@
             statusPending: '⏳ Pending', statusShipped: '✅ Shipped', statusCompleted: '✅ Completed',
             shipOrder: 'Ship', confirmShip: 'Confirm shipment?', shipSuccess: '✅ Shipped',
             completeOrder: 'Complete', completeAndReview: 'Complete & Review',
+            playGame: '🎮 Play Game', gameTitle: '🎰 Slot Machine',
+            spin: 'Spin', spinning: 'Spinning...',
+            youWin: '🎉 You Win!', winCoupon: 'Got {code} (NT${discount} off)',
+            couponAutoApplied: '✅ Coupon auto-applied to cart', tryAgain: 'No luck',
+            comeTomorrow: 'Free play once a day', playedToday: 'Come back tomorrow!',
         },
         ja: {
             title: 'Yulu ショップ <span>｜送料無料</span>',
@@ -498,6 +516,11 @@
             statusPending: '⏳ 出荷待ち', statusShipped: '✅ 発送済み', statusCompleted: '✅ 完了',
             shipOrder: '発送', confirmShip: '発送しますか？', shipSuccess: '✅ 発送しました',
             completeOrder: '完了', completeAndReview: '完了してレビュー',
+            playGame: '🎮 ゲーム', gameTitle: '🎰 スロット',
+            spin: '回す', spinning: '回転中...',
+            youWin: '🎉 当選！', winCoupon: '{code} 獲得（NT${discount} 割引）',
+            couponAutoApplied: '✅ クーポンをカートに適用しました', tryAgain: 'また挑戦',
+            comeTomorrow: '1日1回無料', playedToday: '明日また来てね！',
         }
     };
 
@@ -569,6 +592,8 @@
         document.getElementById('tabRegister').textContent = t('tabRegister');
         const scLabel = document.getElementById('sellerCenterLabel');
         if (scLabel) scLabel.textContent = t('sellerCenter');
+        const gameLabel = document.getElementById('gameLabel');
+        if (gameLabel) gameLabel.textContent = t('playGame');
 
         renderUserArea();
         renderProducts();
@@ -624,6 +649,9 @@
         }
         renderUserArea();
         loadCart();
+        const savedGC = getGameCoupon();
+        if (savedGC) appliedCoupon = savedGC;
+        updateCart();
     }
 
     function renderUserArea() {
@@ -744,6 +772,7 @@
         setSession(null);
         cart = {};
         appliedCoupon = null;
+        clearGameCoupon();
         renderUserArea();
         updateCart();
         showToast(t('loggedOut'));
@@ -1224,6 +1253,7 @@
     function clearCartAfterOrder() {
         cart = {};
         appliedCoupon = null;
+        clearGameCoupon();
         updateCart();
         saveCart();
     }
@@ -1649,6 +1679,94 @@
                     </div>
                 `;
             }).join('');
+    }
+
+    // --- Mini Game ---
+    const gameSlots = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣'];
+    const gameCoupons = [
+        { code: 'LUCKY30', discount: 30, desc: { zh: '🎰 $30', en: '🎰 $30', ja: '🎰 $30' }, min: 100 },
+        { code: 'GAME50', discount: 50, desc: { zh: '🎰 $50', en: '🎰 $50', ja: '🎰 $50' }, min: 200 },
+        { code: 'JACKPOT', discount: 100, desc: { zh: '🎰 $100', en: '🎰 $100', ja: '🎰 $100' }, min: 400 },
+    ];
+    function getGameCoupon() {
+        if (!currentUser) return null;
+        const d = localStorage.getItem('store_game_coupon_' + currentUser.email);
+        return d ? JSON.parse(d) : null;
+    }
+    function saveGameCoupon(c) {
+        if (currentUser) localStorage.setItem('store_game_coupon_' + currentUser.email, JSON.stringify(c));
+    }
+    function clearGameCoupon() {
+        if (currentUser) localStorage.removeItem('store_game_coupon_' + currentUser.email);
+    }
+    function openGame() {
+        if (!currentUser) { showToast(t('loginRequired')); setTimeout(() => openAuth(), 300); return; }
+        document.getElementById('gameModal').classList.add('active');
+        renderGame();
+    }
+    function closeGame() { document.getElementById('gameModal').classList.remove('active'); }
+    function canPlayGame() {
+        if (!currentUser) return false;
+        const key = 'store_game_play_' + currentUser.email;
+        return localStorage.getItem(key) !== new Date().toDateString();
+    }
+    function renderGame() {
+        const el = document.getElementById('gameContent');
+        const canPlay = canPlayGame();
+        const won = getGameCoupon();
+        el.innerHTML = `
+            <div style="text-align:center;padding:30px 20px">
+                <h2 style="font-size:22px;margin-bottom:4px">🎰 ${t('gameTitle')}</h2>
+                <p style="font-size:13px;color:#888;margin-bottom:16px">${t('comeTomorrow')}</p>
+                <div id="gameSlots" style="display:flex;justify-content:center;gap:12px;margin-bottom:20px">
+                    ${['🍒', '🍒', '🍒'].map(s => `
+                        <div class="game-slot" style="width:76px;height:76px;background:#f5f5f5;border:3px solid #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:38px">${s}</div>
+                    `).join('')}
+                </div>
+                ${won ? '<div style="font-size:15px;color:#27ae60;margin-bottom:10px">✅ ' + t('couponAutoApplied') + ': <strong>' + won.code + '</strong></div>' : ''}
+                ${canPlay && !won ? `<button id="spinBtn" class="submit-btn" onclick="spinGame()" style="width:auto;padding:12px 40px;font-size:16px">${t('spin')}</button>` : (!won ? '<div style="color:#bbb;font-size:14px;padding:12px">' + t('playedToday') + '</div>' : '')}
+                <div id="gameResult" style="margin-top:12px;min-height:30px"></div>
+            </div>
+        `;
+    }
+    function spinGame() {
+        const btn = document.getElementById('spinBtn');
+        btn.disabled = true;
+        btn.textContent = t('spinning');
+        const slots = document.querySelectorAll('.game-slot');
+        const interval = setInterval(() => {
+            slots.forEach(s => { s.textContent = gameSlots[Math.floor(Math.random() * gameSlots.length)]; });
+        }, 70);
+        setTimeout(() => {
+            clearInterval(interval);
+            const results = [];
+            slots.forEach(s => {
+                const v = gameSlots[Math.floor(Math.random() * gameSlots.length)];
+                s.textContent = v;
+                results.push(v);
+            });
+            const key = 'store_game_play_' + currentUser.email;
+            localStorage.setItem(key, new Date().toDateString());
+            const win = results.every(r => r === results[0]);
+            const resultEl = document.getElementById('gameResult');
+            if (win) {
+                const coupon = gameCoupons[Math.floor(Math.random() * gameCoupons.length)];
+                saveGameCoupon(coupon);
+                appliedCoupon = coupon;
+                updateCart();
+                btn.remove();
+                resultEl.innerHTML = `
+                    <div style="font-size:22px;font-weight:700;color:#ee4d2d;margin-bottom:6px">🎉 ${t('youWin')}</div>
+                    <div style="font-size:16px;color:#27ae60;font-weight:600">${t('winCoupon', { code: coupon.code, discount: coupon.discount })}</div>
+                    <div style="font-size:13px;color:#888;margin-top:8px;background:#fff8e1;padding:8px 12px;border-radius:6px">${t('couponAutoApplied')} 🛒</div>
+                `;
+            } else {
+                btn.disabled = true;
+                btn.textContent = t('tryAgain');
+                btn.style.display = 'none';
+                resultEl.innerHTML = '<div style="font-size:18px;color:#888">😅 ' + t('tryAgain') + '</div><div style="font-size:13px;color:#bbb;margin-top:4px">' + t('comeTomorrow') + '</div>';
+            }
+        }, 1500);
     }
 
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
